@@ -1,4 +1,7 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using FullStack.API.Data;
+using FullStack.API.Models;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace FullStack.API.Controllers
 {
@@ -6,10 +9,28 @@ namespace FullStack.API.Controllers
     [Route("api/[controller]")]
     public class EmployeesController : Controller
     {
-        [HttpGet]
-        public IActionResult GetAllEmployees()
+        private readonly FullStackDbContext _fullStackDbContext;
+        public EmployeesController(FullStackDbContext fullStackDbContext)
         {
-            return View();
+            _fullStackDbContext = fullStackDbContext;
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetAllEmployees()
+        {
+            var employees = await _fullStackDbContext.Employees.ToListAsync();
+
+            return Ok(employees);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> AddEmployee([FromBody] Employee employeeRequest)
+        {
+            employeeRequest.Id = Guid.NewGuid();
+            await _fullStackDbContext.Employees.AddAsync(employeeRequest);
+            await _fullStackDbContext.SaveChangesAsync();
+
+            return Ok(employeeRequest);
         }
     }
 }
